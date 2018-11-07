@@ -1,0 +1,41 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+          - name: Install apache2 package
+            apt:
+                    name=apache2
+                    state=latest
+
+          - name: Enabled mod_rewrite
+            apache2_module:
+                    name=rewrite
+                    state=present
+            notify:
+                    - restart apache2
+          
+          - name: Listen on port 80
+            lineinfile:
+                    dest=/etc/apache2/ports.conf
+                    regexp='^Listen'
+                    line="Listen 80"
+                    state=present
+            notify:
+                    - restart apache2
+          
+          - name: Create a Hello World Webpage 
+            copy:
+                    content: "Hello, World"
+                    dest: "/var/www/html/helloworld.html"
+                    force: no
+                    group: sys
+                    owner: crackit
+                    mode: 0555
+
+  handlers:
+          - name: restart apache2
+            service:
+                    name=apache2
+                    state=restarted
+
